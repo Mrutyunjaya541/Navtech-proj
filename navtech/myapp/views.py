@@ -75,14 +75,20 @@ from datetime import datetime, timedelta
      
 
 class GetLast3MonthInfo(GenericAPIView):
+    permission_classes = [IsAuthenticated]
     def get(self,request):
-        response = HttpResponse(content_type='text/csv')  
-        response['Content-Disposition'] = 'attachment; filename="file.csv"' 
-        writer = csv.writer(response)
-        today = datetime.today()
-        long_ago = today + timedelta(days=-90)
-        obj = Order_Info.objects.filter(order_date__gte = long_ago)
-        writer.writerow(["Product","Price","Order_Date"]) 
-        for i in obj: 
-            writer.writerow([i.product.product_name,i.product.product_price,i.order_date])
-        return response 
+        user = request.user
+        user_obj = User.objects.get(username=user)
+        if user.is_staff == True:
+            response = HttpResponse(content_type='text/csv')  
+            response['Content-Disposition'] = 'attachment; filename="file.csv"' 
+            writer = csv.writer(response)
+            today = datetime.today()
+            long_ago = today + timedelta(days=-90)
+            obj = Order_Info.objects.filter(order_date__gte = long_ago)
+            writer.writerow(["Product","Price","Order_Date"]) 
+            for i in obj: 
+                writer.writerow([i.product.product_name,i.product.product_price,i.order_date])
+            return response
+        else:
+            return Response({'status':False,"msg":"Yoa are not an admin user"}) 
